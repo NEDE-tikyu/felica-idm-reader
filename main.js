@@ -57,7 +57,14 @@ async function startNFCScan() {
         // リーディングイベント
         nfcReader.onreading = (event) => {
             try {
-                const idm = event.serialNumber;
+                const idm = typeof event.serialNumber === 'string' ? event.serialNumber.trim() : '';
+                if (!idm) {
+                    addDebugLog('❌ serialNumber(IDm) が取得できませんでした', true);
+                    statusIndicator.textContent = '⚠';
+                    statusText.innerHTML = '❌ IDmを取得できませんでした<br>このカードはWeb NFCで読めない可能性があります';
+                    isScanning = false;
+                    return;
+                }
                 addDebugLog(`✓ NFC 読み込み成功 - IDm: ${idm}`);
 
                 // 16進数形式で表示
@@ -73,11 +80,11 @@ async function startNFCScan() {
             }
         };
 
-        // エラーハンドリング
-        nfcReader.onerror = () => {
-            addDebugLog('❌ NFC スキャン中止', true);
+        // NDEF非対応カード等の読み取り失敗イベント
+        nfcReader.onreadingerror = () => {
+            addDebugLog('❌ 読み取り失敗: NDEF未対応カードの可能性があります', true);
             statusIndicator.textContent = '⚠';
-            statusText.innerHTML = 'スキャンがキャンセルされました<br>もう一度かざしてください';
+            statusText.innerHTML = '❌ 読み取り失敗<br>FeliCa学生証はWeb NFCでIDm取得できない場合があります';
             isScanning = false;
         };
 
@@ -101,16 +108,7 @@ async function startNFCScan() {
 
 // IDm 表示
 function displayIDm(idm) {
-    // 16進数文字列に変換（既に16進数の可能性）
-    let hexString = idm;
-    if (!idm.match(/^[0-9a-fA-F]+$/)) {
-        // バイナリの場合は16進数に変換
-        hexString = Array.from(new Uint8Array([idm]))
-            .map(x => ('0' + x.toString(16)).slice(-2).toUpperCase())
-            .join('');
-    } else {
-        hexString = idm.toUpperCase();
-    }
+    const hexString = String(idm).replace(/[^0-9a-fA-F]/g, '').toUpperCase();
 
     idmValue.textContent = hexString;
     resultArea.style.display = 'block';
