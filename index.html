@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 FeliCa IDm リーダー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 FeliCa IDm リーダー</h1>
+            <p class="note">Android Chrome でご利用ください</p>
+        </div>
+
+        <div class="status-area">
+            <div class="status-indicator" id="status-indicator">●</div>
+            <p class="status-text" id="status-text">スクリーンをタップして開始してください</p>
+        </div>
+
+        <div class="result-area" id="result-area" style="display: none;">
+            <div class="idm-display">
+                <p class="label">読み取った IDm:</p>
+                <p class="idm-value" id="idm-value">-</p>
+            </div>
+            <button class="reset-btn" onclick="resetUI()">次のカードを読む</button>
+        </div>
+
+        <div class="debug-area">
+            <details>
+                <summary>📋 デバッグ情報</summary>
+                <div class="debug-log" id="debug-log">
+                    <p>• ページ読み込み完了</p>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
