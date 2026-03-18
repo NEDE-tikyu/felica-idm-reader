@@ -6,6 +6,7 @@ const debugLog = document.getElementById('debug-log');
 
 let nfcReader = null;
 let isScanning = false;
+let scanTimeoutId = null;
 
 // デバッグログ追加
 function addDebugLog(message, isError = false) {
@@ -50,6 +51,18 @@ async function startNFCScan() {
         await nfcReader.scan();
         addDebugLog('✓ scan() 成功 - スキャン待機中...');
 
+        if (scanTimeoutId) {
+            clearTimeout(scanTimeoutId);
+        }
+        scanTimeoutId = setTimeout(() => {
+            if (isScanning) {
+                addDebugLog('⚠️ 読み取りイベントなし: このカードはWeb NFC対象外の可能性があります', true);
+                statusIndicator.textContent = '⚠';
+                statusText.innerHTML = '⚠️ カード反応はありましたがIDmを取得できませんでした<br>Web NFCではNDEF以外を読めない場合があります';
+                isScanning = false;
+            }
+        }, 8000);
+
         statusIndicator.textContent = '⏳';
         statusIndicator.classList.remove('success');
         statusText.innerHTML = '📱 学生証をかざしてください';
@@ -74,6 +87,10 @@ async function startNFCScan() {
                 if (nfcReader) {
                     nfcReader.onreading = null;
                 }
+                if (scanTimeoutId) {
+                    clearTimeout(scanTimeoutId);
+                    scanTimeoutId = null;
+                }
                 isScanning = false;
             } catch (err) {
                 addDebugLog(`❌ IDm 抽出エラー: ${err.message}`, true);
@@ -85,6 +102,10 @@ async function startNFCScan() {
             addDebugLog('❌ 読み取り失敗: NDEF未対応カードの可能性があります', true);
             statusIndicator.textContent = '⚠';
             statusText.innerHTML = '❌ 読み取り失敗<br>FeliCa学生証はWeb NFCでIDm取得できない場合があります';
+            if (scanTimeoutId) {
+                clearTimeout(scanTimeoutId);
+                scanTimeoutId = null;
+            }
             isScanning = false;
         };
 
@@ -102,6 +123,10 @@ async function startNFCScan() {
         }
 
         statusIndicator.textContent = '✗';
+        if (scanTimeoutId) {
+            clearTimeout(scanTimeoutId);
+            scanTimeoutId = null;
+        }
         isScanning = false;
     }
 }
@@ -126,6 +151,10 @@ function resetUI() {
     statusIndicator.textContent = '●';
     statusIndicator.classList.remove('success');
     statusText.innerHTML = 'スクリーンをタップして、次のカードを読んでください';
+    if (scanTimeoutId) {
+        clearTimeout(scanTimeoutId);
+        scanTimeoutId = null;
+    }
     isScanning = false;
     addDebugLog('UI リセット - スキャン準備完了');
 }
